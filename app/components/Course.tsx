@@ -44,6 +44,7 @@ export default function Course({ title, price, image, description, slug }: Cours
       <div className="px-6 pb-6">
         {isFree ? (
           <Link
+          name="get-course-for-free"
             href={`/course/${slug}/enroll`}
             className="block w-full text-center bg-[#1a1a2e] text-white px-6 py-2 rounded font-semibold hover:bg-[#2a2a3e] transition-colors"
           >
@@ -51,6 +52,7 @@ export default function Course({ title, price, image, description, slug }: Cours
           </Link>
         ) : (
           <Link
+            name="buy-now"  
             href={`/course/${slug}`}
             className="block w-full text-center bg-blue-600 text-white px-6 py-2 rounded font-semibold hover:bg-blue-700 transition-colors"
           >

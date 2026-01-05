@@ -1,14 +1,16 @@
 "use client";
 
 import { useSearchParams, useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { getCourseBySlug, courses } from "../data/courses";
+import { getCurrentUser } from "../../lib/supabase/auth";
+import { getOrCreateCourse, enrollInCourse, isEnrolled } from "../../lib/supabase/database";
 
-export default function CheckoutPage() {
+function CheckoutContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const courseSlug = searchParams.get("course");
@@ -24,12 +26,13 @@ export default function CheckoutPage() {
     zipCode: "",
     country: "",
   });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (courseSlug) {
       const foundCourse = getCourseBySlug(courseSlug);
       setCourse(foundCourse);
-      // If it's a free course, redirect to dashboard
       if (foundCourse && foundCourse.price.toLowerCase() === "free") {
         router.push("/dashboard");
       }
@@ -51,15 +54,56 @@ export default function CheckoutPage() {
     );
   }
 
-  // This page is only for paid courses - free courses are redirected to dashboard
   const price = parseFloat(course.price);
   const tax = price * 0.1;
   const total = price + tax;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // In a real app, this would process the payment
-    alert("Payment processing would happen here");
+    setLoading(true);
+    setError(null);
+
+    try {
+      const { user, error: userError } = await getCurrentUser();
+      if (userError || !user) {
+        setError("Please sign in to complete your purchase.");
+        setLoading(false);
+        router.push(`/login?redirect=/checkout?course=${courseSlug}`);
+        return;
+      }
+
+      const dbCourse = await getOrCreateCourse(
+        course.id,
+        course.title,
+        course.description,
+        course.price
+      );
+
+      if (!dbCourse) {
+        setError("Failed to process course enrollment. Please try again.");
+        setLoading(false);
+        return;
+      }
+
+      const enrolled = await isEnrolled(user.id, dbCourse.id);
+      if (enrolled) {
+        router.push("/dashboard");
+        return;
+      }
+
+      const success = await enrollInCourse(user.id, dbCourse.id);
+      if (!success) {
+        setError("Failed to enroll in course. Please try again.");
+        setLoading(false);
+        return;
+      }
+
+      router.push("/dashboard");
+    } catch (err) {
+      console.error("Checkout error:", err);
+      setError("An error occurred. Please try again.");
+      setLoading(false);
+    }
   };
 
   return (
@@ -79,6 +123,12 @@ export default function CheckoutPage() {
             <div className="lg:col-span-2">
               <div className="bg-white rounded-lg shadow-md p-8">
                 <h1 className="text-3xl font-bold text-gray-800 mb-8">Checkout</h1>
+
+                {error && (
+                  <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-6">
+                    {error}
+                  </div>
+                )}
 
                 {/* Course Summary */}
                 <div className="bg-gray-50 rounded-lg p-6 mb-8">
@@ -110,6 +160,7 @@ export default function CheckoutPage() {
                           </label>
                           <input
                             type="email"
+                            name="email"
                             required
                             value={formData.email}
                             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
@@ -123,6 +174,7 @@ export default function CheckoutPage() {
                           </label>
                           <input
                             type="text"
+                            name="name"
                             required
                             value={formData.name}
                             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -143,6 +195,7 @@ export default function CheckoutPage() {
                           </label>
                           <input
                             type="text"
+                            name="cardNumber"
                             required
                             value={formData.cardNumber}
                             onChange={(e) => setFormData({ ...formData, cardNumber: e.target.value })}
@@ -158,6 +211,7 @@ export default function CheckoutPage() {
                             </label>
                             <input
                               type="text"
+                              name="expiryDate"
                               required
                               value={formData.expiryDate}
                               onChange={(e) => setFormData({ ...formData, expiryDate: e.target.value })}
@@ -172,6 +226,7 @@ export default function CheckoutPage() {
                             </label>
                             <input
                               type="text"
+                              name="cvv"
                               required
                               value={formData.cvv}
                               onChange={(e) => setFormData({ ...formData, cvv: e.target.value })}
@@ -194,6 +249,7 @@ export default function CheckoutPage() {
                           </label>
                           <input
                             type="text"
+                            name="billingAddress"
                             required
                             value={formData.billingAddress}
                             onChange={(e) => setFormData({ ...formData, billingAddress: e.target.value })}
@@ -208,6 +264,7 @@ export default function CheckoutPage() {
                             </label>
                             <input
                               type="text"
+                              name="city"
                               required
                               value={formData.city}
                               onChange={(e) => setFormData({ ...formData, city: e.target.value })}
@@ -220,6 +277,7 @@ export default function CheckoutPage() {
                             </label>
                             <input
                               type="text"
+                              name="zipCode"
                               required
                               value={formData.zipCode}
                               onChange={(e) => setFormData({ ...formData, zipCode: e.target.value })}
@@ -233,6 +291,7 @@ export default function CheckoutPage() {
                           </label>
                           <input
                             type="text"
+                            name="country"
                             required
                             value={formData.country}
                             onChange={(e) => setFormData({ ...formData, country: e.target.value })}
@@ -244,12 +303,12 @@ export default function CheckoutPage() {
 
                     <button
                       type="submit"
-                      className="w-full bg-blue-600 text-white py-4 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+                      disabled={loading}
+                      className="w-full bg-blue-600 text-white py-4 rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      Complete Purchase
+                      {loading ? "Processing..." : "Complete Purchase"}
                     </button>
                   </form>
-                )}
               </div>
             </div>
 
@@ -327,6 +386,22 @@ export default function CheckoutPage() {
 
       <Footer />
     </div>
+  );
+}
+
+export default function CheckoutPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50">
+        <Navbar />
+        <div className="container mx-auto px-4 py-20 text-center">
+          <p className="text-gray-600">Loading checkout...</p>
+        </div>
+        <Footer />
+      </div>
+    }>
+      <CheckoutContent />
+    </Suspense>
   );
 }
 

@@ -1,9 +1,45 @@
 import Image from "next/image";
 import Link from "next/link";
+import type { Metadata } from "next";
 import Navbar from "./components/Navbar";
 import Course from "./components/Course";
 import Footer from "./components/Footer";
 import { courses } from "./data/courses";
+
+export const metadata: Metadata = {
+  title: "Learn Programming Online - Python, Web Development, React & More",
+  description: "Join thousands of students learning to code. Start your journey with our comprehensive programming courses. Learn Python, Web Development, React, and PostgreSQL at your own pace with expert instructors.",
+  keywords: [
+    "learn programming",
+    "coding courses",
+    "Python programming",
+    "web development course",
+    "React tutorial",
+    "JavaScript course",
+    "online coding classes",
+    "programming for beginners",
+  ],
+  openGraph: {
+    title: "Learn Programming Online - CodeAcademy",
+    description: "Join thousands of students learning to code. Start your journey with our comprehensive programming courses.",
+    images: [
+      {
+        url: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=1200&h=630&fit=crop",
+        width: 1200,
+        height: 630,
+        alt: "CodeAcademy Programming Courses",
+    },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Learn Programming Online - CodeAcademy",
+    description: "Join thousands of students learning to code. Start your journey with our comprehensive programming courses.",
+    },
+  alternates: {
+    canonical: "https://codeacademy.com",
+  },
+};
 
 export default function Home() {
   return (
@@ -24,7 +60,7 @@ export default function Home() {
           />
           {/* Overlay for better text readability */}
           <div className="absolute inset-0 bg-linear-to-r from-black/70 via-black/50 to-transparent"></div>
-        </div>
+            </div>
         
         <div className="container mx-auto px-4 relative z-10">
           <div className="max-w-2xl">
@@ -90,16 +126,16 @@ export default function Home() {
                 <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                 </svg>
-              </div>
+          </div>
               <h3 className="text-xl font-bold text-gray-800 mb-2">Learn at Your Pace</h3>
               <p className="text-gray-600">Study on your own schedule with lifetime access to course materials.</p>
-            </div>
+        </div>
             <div className="text-center">
               <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-              </div>
+          </div>
               <h3 className="text-xl font-bold text-gray-800 mb-2">Certificates</h3>
               <p className="text-gray-600">Earn certificates upon completion to showcase your new skills.</p>
             </div>
@@ -117,6 +153,6 @@ export default function Home() {
       </section>
 
       <Footer />
-    </div>
+        </div>
   );
 }

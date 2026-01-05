@@ -1,32 +1,76 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Navbar from "../../../components/Navbar";
 import Footer from "../../../components/Footer";
 import { getCourseBySlug, Course } from "../../../data/courses";
+import { getCurrentUser } from "../../../../lib/supabase/auth";
+import { isEnrolled, getCourseByTitle } from "../../../../lib/supabase/database";
 
 export default function WatchPage({ params }: { params: Promise<{ slug: string }> }) {
+  const router = useRouter();
   const [course, setCourse] = useState<Course | undefined>(undefined);
+  const [loading, setLoading] = useState(true);
+  const [authorized, setAuthorized] = useState(false);
 
   useEffect(() => {
     async function loadCourse() {
       const resolvedParams = await params;
       const foundCourse = getCourseBySlug(resolvedParams.slug);
-      setCourse(foundCourse);
       
-      // In a real app, check if user is enrolled
-      // For now, we'll allow access (you can add enrollment check here)
+      if (!foundCourse) {
+        router.push("/");
+        return;
+      }
+
+      const { user } = await getCurrentUser();
+      if (!user) {
+        router.push("/login");
+        return;
+      }
+
+      const dbCourse = await getCourseByTitle(foundCourse.title);
+      if (!dbCourse) {
+        router.push("/");
+        return;
+      }
+
+      const enrolled = await isEnrolled(user.id, dbCourse.id);
+      if (!enrolled) {
+        router.push(`/course/${foundCourse.slug}`);
+        return;
+      }
+
+      setCourse(foundCourse);
+      setAuthorized(true);
+      setLoading(false);
     }
     loadCourse();
-  }, [params]);
+  }, [params, router]);
+
+  if (loading || !authorized) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Navbar />
+        <div className="container mx-auto px-4 py-20 text-center">
+          <h1 className="text-3xl font-bold mb-4">Loading...</h1>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
 
   if (!course) {
     return (
       <div className="min-h-screen bg-gray-50">
         <Navbar />
         <div className="container mx-auto px-4 py-20 text-center">
-          <h1 className="text-3xl font-bold mb-4">Loading...</h1>
+          <h1 className="text-3xl font-bold mb-4">Course not found</h1>
+          <Link href="/dashboard" className="text-blue-600 hover:underline">
+            Back to Dashboard
+          </Link>
         </div>
         <Footer />
       </div>
@@ -48,7 +92,6 @@ export default function WatchPage({ params }: { params: Promise<{ slug: string }
     );
   }
 
-  // Extract YouTube video ID from URL
   const getYouTubeVideoId = (url: string) => {
     const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
     const match = url.match(regExp);

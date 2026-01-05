@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import { signIn } from "../../lib/supabase/auth";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -13,19 +14,27 @@ export default function LoginPage() {
     password: "",
   });
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setLoading(true);
     
-    // Simple validation
     if (!formData.email || !formData.password) {
       setError("Please fill in all fields");
+      setLoading(false);
       return;
     }
 
-    // In a real app, this would authenticate with a backend
-    // For now, just redirect to dashboard
+    const { error: signInError } = await signIn(formData.email, formData.password);
+    
+    if (signInError) {
+      setError(signInError);
+      setLoading(false);
+      return;
+    }
+
     router.push("/dashboard");
   };
 
@@ -57,6 +66,7 @@ export default function LoginPage() {
                 </label>
                 <input
                   type="email"
+                  name="email"
                   required
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
@@ -71,6 +81,7 @@ export default function LoginPage() {
                 </label>
                 <input
                   type="password"
+                  name="password"
                   required
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
@@ -79,37 +90,15 @@ export default function LoginPage() {
                 />
               </div>
 
-              <div className="flex items-center justify-between">
-                <label className="flex items-center">
-                  <input type="checkbox" className="rounded border-gray-300 text-blue-600 focus:ring-blue-600" />
-                  <span className="ml-2 text-sm text-gray-600">Remember me</span>
-                </label>
-                <Link href="#" className="text-sm text-blue-600 hover:underline">
-                  Forgot password?
-                </Link>
-              </div>
-
               <button
+              name="sign-in"
                 type="submit"
-                className="w-full bg-[#1a1a2e] text-white py-3 rounded-lg font-semibold hover:bg-[#2a2a3e] transition-colors"
+                disabled={loading}
+                className="w-full bg-[#1a1a2e] text-white py-3 rounded-lg font-semibold hover:bg-[#2a2a3e] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Sign In
+                {loading ? "Signing in..." : "Sign In"}
               </button>
             </form>
-
-            <div className="mt-6 pt-6 border-t border-gray-200">
-              <p className="text-sm text-gray-600 text-center">
-                By signing in, you agree to our{" "}
-                <Link href="#" className="text-blue-600 hover:underline">
-                  Terms of Service
-                </Link>{" "}
-                and{" "}
-                <Link href="#" className="text-blue-600 hover:underline">
-                  Privacy Policy
-                </Link>
-                .
-              </p>
-            </div>
           </div>
         </div>
       </div>

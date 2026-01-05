@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import { signUp } from "../../lib/supabase/auth";
 
 export default function SignUpPage() {
   const router = useRouter();
@@ -15,30 +16,50 @@ export default function SignUpPage() {
     confirmPassword: "",
   });
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setLoading(true);
 
-    // Validation
     if (!formData.name || !formData.email || !formData.password || !formData.confirmPassword) {
       setError("Please fill in all fields");
+      setLoading(false);
       return;
     }
 
     if (formData.password !== formData.confirmPassword) {
       setError("Passwords do not match");
+      setLoading(false);
       return;
     }
 
     if (formData.password.length < 8) {
       setError("Password must be at least 8 characters");
+      setLoading(false);
       return;
     }
 
-    // In a real app, this would create an account with a backend
-    // For now, just redirect to dashboard
-    router.push("/dashboard");
+    const { data, error: signUpError } = await signUp(formData.email, formData.password, formData.name);
+    
+    if (signUpError) {
+      setError(signUpError);
+      setLoading(false);
+      return;
+    }
+
+    if (data?.user && !data.session) {
+      setError("Please check your email to confirm your account before signing in.");
+      setLoading(false);
+      return;
+    }
+
+    if (data?.session) {
+      router.push("/dashboard");
+    } else {
+      router.push("/login");
+    }
   };
 
   return (
@@ -69,6 +90,7 @@ export default function SignUpPage() {
                 </label>
                 <input
                   type="text"
+                  name="name"
                   required
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -83,6 +105,7 @@ export default function SignUpPage() {
                 </label>
                 <input
                   type="email"
+                  name="email"
                   required
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
@@ -97,6 +120,7 @@ export default function SignUpPage() {
                 </label>
                 <input
                   type="password"
+                  name="password"
                   required
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
@@ -112,6 +136,7 @@ export default function SignUpPage() {
                 </label>
                 <input
                   type="password"
+                  name="confirmPassword"
                   required
                   value={formData.confirmPassword}
                   onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
@@ -120,29 +145,13 @@ export default function SignUpPage() {
                 />
               </div>
 
-              <div className="flex items-start">
-                <input
-                  type="checkbox"
-                  required
-                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-600 mt-1"
-                />
-                <label className="ml-2 text-sm text-gray-600">
-                  I agree to the{" "}
-                  <Link href="#" className="text-blue-600 hover:underline">
-                    Terms of Service
-                  </Link>{" "}
-                  and{" "}
-                  <Link href="#" className="text-blue-600 hover:underline">
-                    Privacy Policy
-                  </Link>
-                </label>
-              </div>
-
               <button
                 type="submit"
-                className="w-full bg-[#1a1a2e] text-white py-3 rounded-lg font-semibold hover:bg-[#2a2a3e] transition-colors"
+                name="create-account"
+                disabled={loading}
+                className="w-full bg-[#1a1a2e] text-white py-3 rounded-lg font-semibold hover:bg-[#2a2a3e] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Create Account
+                {loading ? "Creating account..." : "Create Account"}
               </button>
             </form>
           </div>
