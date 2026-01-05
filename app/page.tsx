@@ -1,9 +1,45 @@
 import Image from "next/image";
 import Link from "next/link";
+import type { Metadata } from "next";
 import Navbar from "./components/Navbar";
 import Course from "./components/Course";
 import Footer from "./components/Footer";
 import { courses } from "./data/courses";
+
+export const metadata: Metadata = {
+  title: "Learn Programming Online - Python, Web Development, React & More",
+  description: "Join thousands of students learning to code. Start your journey with our comprehensive programming courses. Learn Python, Web Development, React, and PostgreSQL at your own pace with expert instructors.",
+  keywords: [
+    "learn programming",
+    "coding courses",
+    "Python programming",
+    "web development course",
+    "React tutorial",
+    "JavaScript course",
+    "online coding classes",
+    "programming for beginners",
+  ],
+  openGraph: {
+    title: "Learn Programming Online - CodeAcademy",
+    description: "Join thousands of students learning to code. Start your journey with our comprehensive programming courses.",
+    images: [
+      {
+        url: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=1200&h=630&fit=crop",
+        width: 1200,
+        height: 630,
+        alt: "CodeAcademy Programming Courses",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Learn Programming Online - CodeAcademy",
+    description: "Join thousands of students learning to code. Start your journey with our comprehensive programming courses.",
+  },
+  alternates: {
+    canonical: "https://codeacademy.com",
+  },
+};
 
 export default function Home() {
   return (
