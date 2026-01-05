@@ -1,25 +1,90 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { courses } from "../data/courses";
+import { getCurrentUser } from "../../lib/supabase/auth";
+import { getEnrolledCourses } from "../../lib/supabase/database";
+import { Course as DBCourse } from "../../lib/supabase/database";
 
 export default function DashboardPage() {
-  // In a real app, this would come from user authentication/state
-  const enrolledCourses = courses.slice(0, 2); // Simulating 2 enrolled courses
-  const [activeCourse, setActiveCourse] = useState(enrolledCourses[0]);
+  const router = useRouter();
+  const [enrolledCourses, setEnrolledCourses] = useState<any[]>([]);
+  const [activeCourse, setActiveCourse] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadEnrolledCourses() {
+      const { user } = await getCurrentUser();
+      if (!user) {
+        router.push("/login");
+        return;
+      }
+
+      const dbCourses = await getEnrolledCourses(user.id);
+      
+      const mappedCourses = dbCourses.map((dbCourse: DBCourse) => {
+        const localCourse = courses.find(c => c.title === dbCourse.title);
+        return {
+          ...dbCourse,
+          slug: localCourse?.slug || dbCourse.title.toLowerCase().replace(/\s+/g, '-'),
+          image: localCourse?.image || '',
+          videoUrl: localCourse?.videoUrl || '',
+          instructor: localCourse?.instructor || 'Instructor',
+        };
+      });
+
+      setEnrolledCourses(mappedCourses);
+      if (mappedCourses.length > 0) {
+        setActiveCourse(mappedCourses[0]);
+      }
+      setLoading(false);
+    }
+
+    loadEnrolledCourses();
+  }, [router]);
 
   const getProgress = (courseId: string) => {
-    // Simulated progress - in real app, this would come from backend
     const progressMap: { [key: string]: number } = {
       python: 45,
       "html-css-javascript": 30,
     };
     return progressMap[courseId] || 0;
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Navbar />
+        <div className="container mx-auto px-4 py-20 text-center">
+          <p className="text-gray-600">Loading your courses...</p>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (enrolledCourses.length === 0) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Navbar />
+        <div className="container mx-auto px-4 py-20 text-center">
+          <h1 className="text-3xl font-bold text-gray-800 mb-4">No Enrolled Courses</h1>
+          <p className="text-gray-600 mb-8">You haven't enrolled in any courses yet.</p>
+          <Link href="/" className="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors inline-block">
+            Browse Courses
+          </Link>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (!activeCourse) return null;
 
   return (
     <div className="min-h-screen bg-gray-50">
