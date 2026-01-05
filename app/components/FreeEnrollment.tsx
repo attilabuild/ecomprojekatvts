@@ -23,9 +23,7 @@ export default function FreeEnrollment({ courseTitle, courseImage, courseSlug }:
     if (!formData.email || !formData.name) {
       return;
     }
-    // In a real app, this would enroll the user in the course
     setEnrolled(true);
-    // Redirect to dashboard after 2 seconds
     setTimeout(() => {
       router.push("/dashboard");
     }, 2000);

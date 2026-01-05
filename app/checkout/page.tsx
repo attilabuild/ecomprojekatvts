@@ -160,6 +160,7 @@ function CheckoutContent() {
                           </label>
                           <input
                             type="email"
+                            name="email"
                             required
                             value={formData.email}
                             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
@@ -173,6 +174,7 @@ function CheckoutContent() {
                           </label>
                           <input
                             type="text"
+                            name="name"
                             required
                             value={formData.name}
                             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -193,6 +195,7 @@ function CheckoutContent() {
                           </label>
                           <input
                             type="text"
+                            name="cardNumber"
                             required
                             value={formData.cardNumber}
                             onChange={(e) => setFormData({ ...formData, cardNumber: e.target.value })}
@@ -208,6 +211,7 @@ function CheckoutContent() {
                             </label>
                             <input
                               type="text"
+                              name="expiryDate"
                               required
                               value={formData.expiryDate}
                               onChange={(e) => setFormData({ ...formData, expiryDate: e.target.value })}
@@ -222,6 +226,7 @@ function CheckoutContent() {
                             </label>
                             <input
                               type="text"
+                              name="cvv"
                               required
                               value={formData.cvv}
                               onChange={(e) => setFormData({ ...formData, cvv: e.target.value })}
@@ -244,6 +249,7 @@ function CheckoutContent() {
                           </label>
                           <input
                             type="text"
+                            name="billingAddress"
                             required
                             value={formData.billingAddress}
                             onChange={(e) => setFormData({ ...formData, billingAddress: e.target.value })}
@@ -258,6 +264,7 @@ function CheckoutContent() {
                             </label>
                             <input
                               type="text"
+                              name="city"
                               required
                               value={formData.city}
                               onChange={(e) => setFormData({ ...formData, city: e.target.value })}
@@ -270,6 +277,7 @@ function CheckoutContent() {
                             </label>
                             <input
                               type="text"
+                              name="zipCode"
                               required
                               value={formData.zipCode}
                               onChange={(e) => setFormData({ ...formData, zipCode: e.target.value })}
@@ -283,6 +291,7 @@ function CheckoutContent() {
                           </label>
                           <input
                             type="text"
+                            name="country"
                             required
                             value={formData.country}
                             onChange={(e) => setFormData({ ...formData, country: e.target.value })}
