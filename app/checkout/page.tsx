@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams, useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import Navbar from "../components/Navbar";
@@ -10,7 +10,7 @@ import { getCourseBySlug, courses } from "../data/courses";
 import { getCurrentUser } from "../../lib/supabase/auth";
 import { getOrCreateCourse, enrollInCourse, isEnrolled } from "../../lib/supabase/database";
 
-export default function CheckoutPage() {
+function CheckoutContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const courseSlug = searchParams.get("course");
@@ -377,6 +377,22 @@ export default function CheckoutPage() {
 
       <Footer />
     </div>
+  );
+}
+
+export default function CheckoutPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50">
+        <Navbar />
+        <div className="container mx-auto px-4 py-20 text-center">
+          <p className="text-gray-600">Loading checkout...</p>
+        </div>
+        <Footer />
+      </div>
+    }>
+      <CheckoutContent />
+    </Suspense>
   );
 }
 
